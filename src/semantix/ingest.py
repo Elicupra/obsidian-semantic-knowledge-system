@@ -4,6 +4,70 @@ from urllib.parse import urlparse
 from typing import Optional
 
 
+SYSTEM_PROMPT = """Eres un agente de ingesta de conocimiento para una bóveda Obsidian.
+
+Tu objetivo NO es resumir. Tu objetivo es:
+- Extraer conocimiento reutilizable y conceptos accionables
+- Preservar la jerarquía semántica del contenido original
+- Generar una nota Obsidian lista para usar como segundo cerebro
+
+REGLAS ESTRICTAS:
+- Nunca produzcas resúmenes superficiales ni lenguaje de marketing
+- Preserva terminología técnica exacta del original
+- Si el contenido es código, presérvalo íntegro en bloques de código
+- Reescribe con tus palabras solo cuando mejore la claridad, no para condensar
+- Mantén densidad conceptual alta
+- Responde exclusivamente en español"""
+
+
+USER_PROMPT = """Procesa esta fuente como agente de conocimiento Obsidian.
+
+## Metadatos de entrada
+- Título: {title}
+- Tipo de fuente: {source_type}
+- URL/Origen: {source_url}
+
+## Contenido fuente
+{content}
+
+---
+
+## Instrucciones de salida
+
+Genera una nota Obsidian completa con esta estructura exacta:
+
+### 1. Frontmatter YAML
+Incluye: title, source, source_type, created (hoy), language, tags (máx 6), topics, entities, related (vacío por ahora)
+
+### 2. Cuerpo de la nota
+
+# [Título descriptivo]
+
+## Idea Central
+Una sola oración que capture la tesis o propósito del contenido.
+
+## Conceptos Clave
+Para cada concepto relevante:
+**[Nombre del concepto]**: explicación precisa y reutilizable. Incluye ejemplos concretos si los hay en el original.
+
+## Desarrollo
+Secciones basadas en la estructura lógica del contenido original — no en su formato.
+Usa subsecciones si el tema lo requiere. Preserva pasos, listas, código y datos numéricos exactos.
+
+## Relaciones
+- Conceptos relacionados que probablemente ya existan en la bóveda: [[...]]
+- Tecnologías o personas mencionadas: [[...]]
+
+## Acciones
+- [ ] Tareas o next steps si el contenido los implica
+
+## Observaciones Críticas
+Limitaciones, sesgos detectados o información que requiere validación adicional.
+
+## Referencias
+Fuentes citadas en el contenido original."""
+
+
 class Ingestor:
     def __init__(self, model_provider):
         self.model_provider = model_provider
@@ -16,25 +80,19 @@ class Ingestor:
         else:
             raise ValueError(f"Input invalido: {input_path}")
     
-    def summarize(self, content: str, title: str = "") -> str:
-        prompt = f"""Eres un asistente que resume contenido de articles o videos de manera clara y estructurada.
-Crea un resumen completo en formato Markdown con:
-1. Un titulo claro si no se proporciona
-2. Puntos clave del contenido
-3. Secciones principales si aplica
-
-Titulo original: {title}
-
-Contenido a resumir:
-{content[:15000]}
-
-Responde exclusivamente en español con el resumen en formato Markdown."""
+    def summarize(self, content: str, title: str = "", source_type: str = "article", source_url: str = "") -> str:
+        prompt = USER_PROMPT.format(
+            title=title,
+            source_type=source_type,
+            source_url=source_url,
+            content=content[:15000]
+        )
 
         try:
-            summary = self.model_provider.generate(prompt, content[:15000])
+            summary = self.model_provider.generate(SYSTEM_PROMPT, prompt)
             return summary
         except Exception as e:
-            return f"# Error al resumir\n\n{str(e)}\n\n---Contenido original---\n\n{content[:2000]}..."
+            return f"# Error al procesar\n\n{str(e)}\n\n---Contenido original---\n\n{content[:2000]}..."
     
     def _is_url(self, input_str: str) -> bool:
         try:

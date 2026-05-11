@@ -39,10 +39,12 @@ def ingest(input, vault, model, category, metadata, verbose, summarize):
     
     content = result.get("content", result.get("description", ""))
     title = result.get("title", "Sin titulo")
+    source_type = result.get("type", "article")
+    source_url = result.get("source", "")
     
     if summarize and content:
-        click.echo("Generando resumen con LLM...")
-        result["content"] = ingestor.summarize(content, title)
+        click.echo("Procesando con LLM...")
+        result["content"] = ingestor.summarize(content, title, source_type, source_url)
     
     generator = NoteGenerator(Path(vault), include_metadata=metadata)
     output_path = generator.generate(result, category=category)
