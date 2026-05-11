@@ -16,6 +16,7 @@ dependencies = [
     "python-rake>=1.5.0",
     "groq>=0.4.0",
     "pdfplumber>=0.10.0",
+    "keyring>=25.0.0",
 ]
 
 [project.optional-dependencies]

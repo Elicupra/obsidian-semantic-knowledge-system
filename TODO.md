@@ -32,4 +32,28 @@
   ```
 
 ## Pendientes
-- Ninguno
+
+### ✅ Completado: Sistema de Configuración con Encriptación
+
+#### Tarea 1: Agregar dependencias (keyring, python-dotenv) - ✅ COMPLETO
+- **Archivos**: pyproject.toml
+- **Cambios**: Agregado `keyring>=25.0.0`
+
+#### Tarea 2: Crear modulo config.py - ✅ COMPLETO
+- **Archivos**: src/semantix/config.py
+- **Funcionalidades**: Sistema de credenciales con keyring, config.json, soporte .env
+
+#### Tarea 3: Expandir providers - ✅ COMPLETO
+- **Archivos**: src/semantix/models.py
+- **Proveedores**: Groq, OpenRouter, OpenAI, Google, Claude, Local (Ollama)
+
+#### Tarea 4: Comando semantix config - ✅ COMPLETO
+- **Archivos**: src/semantix/cli.py
+- **Subcomandos**: set, show, remove, default
+
+#### Tarea 5: Integrar en models.py - ✅ COMPLETO
+- **Archivos**: src/semantix/models.py
+- **Cambios**: Usa sistema de config existente
+
+#### Tarea 6: Crear .env.example - ✅ COMPLETO
+- **Archivos**: .env.example
