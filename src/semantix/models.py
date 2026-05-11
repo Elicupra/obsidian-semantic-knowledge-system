@@ -12,6 +12,35 @@ class ModelProvider(ABC):
         pass
 
 
+class GroqProvider(ModelProvider):
+    def __init__(self, api_key: Optional[str] = None):
+        super().__init__("groq")
+        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.model = "llama-3.3-70b-versatile"
+    
+    def generate(self, prompt: str, context: str) -> str:
+        if not self.api_key:
+            raise ValueError("GROQ_API_KEY no configurada")
+        
+        try:
+            from groq import Groq
+        except ImportError:
+            raise ImportError("groq package not installed. Run: pip install groq")
+        
+        client = Groq(api_key=self.api_key)
+        
+        full_prompt = f"{prompt}\n\nContexto:\n{context}"
+        
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.7,
+            max_tokens=4000,
+        )
+        
+        return response.choices[0].message.content
+
+
 class GeminiProvider(ModelProvider):
     def __init__(self, api_key: Optional[str] = None):
         super().__init__("gemini")
@@ -45,7 +74,9 @@ class LocalProvider(ModelProvider):
 
 def get_provider(model_type: str = "auto") -> ModelProvider:
     if model_type == "auto":
-        if os.getenv("GEMINI_API_KEY"):
+        if os.getenv("GROQ_API_KEY"):
+            return GroqProvider()
+        elif os.getenv("GEMINI_API_KEY"):
             return GeminiProvider()
         elif os.getenv("CLAUDE_API_KEY"):
             return ClaudeProvider()
@@ -53,6 +84,7 @@ def get_provider(model_type: str = "auto") -> ModelProvider:
             return LocalProvider()
     
     providers = {
+        "groq": GroqProvider,
         "gemini": GeminiProvider,
         "claude": ClaudeProvider,
         "local": LocalProvider,

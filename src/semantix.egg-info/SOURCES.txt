@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/semantix/__init__.py
+src/semantix/backlinks.py
+src/semantix/cli.py
+src/semantix/dedupe.py
+src/semantix/generate.py
+src/semantix/ingest.py
+src/semantix/models.py
+src/semantix.egg-info/PKG-INFO
+src/semantix.egg-info/SOURCES.txt
+src/semantix.egg-info/dependency_links.txt
+src/semantix.egg-info/entry_points.txt
+src/semantix.egg-info/requires.txt
+src/semantix.egg-info/top_level.txt

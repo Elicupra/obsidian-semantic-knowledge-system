@@ -2,27 +2,36 @@ import click
 from pathlib import Path
 from semantix.ingest import Ingestor
 from semantix.generate import NoteGenerator
-from semantix.models import ModelProvider
+from semantix.models import ModelProvider, get_provider
 
 
 @click.group()
 @click.version_option(version="0.1.0")
 def main():
-    """Semantix - CLI para ingestión de conocimiento en Obsidian"""
+    """Semantix - CLI para ingestion de conocimiento en Obsidian"""
     pass
 
 
 @main.command()
 @click.option("--input", "-i", required=True, help="Archivo, URL o path a procesar")
 @click.option("--vault", "-v", required=True, type=click.Path(exists=True), help="Ruta al vault de Obsidian")
-@click.option("--model", "-m", default="auto", type=click.Choice(["gemini", "claude", "local", "auto"]), help="Modelo a usar")
-@click.option("--category", "-c", default=None, help="Categoría/carpeta destino")
+@click.option("--model", "-m", default="auto", type=click.Choice(["groq", "gemini", "claude", "local", "auto"]), help="Modelo a usar")
+@click.option("--summarize/--no-summarize", default=True, help="Usar LLM para resumir contenido")
+@click.option("--category", "-c", default=None, help="Categoria/carpeta destino")
 @click.option("--metadata/--no-metadata", default=True, help="Incluir metadata YAML")
-@click.option("--verbose", "-vv", is_count=True, help="Modo verbose")
-def ingest(input, vault, model, category, metadata, verbose):
+@click.option("--verbose", "-vv", count=True, help="Modo verbose")
+def ingest(input, vault, model, category, metadata, verbose, summarize):
     """Procesa un archivo/URL y genera nota en Obsidian"""
-    ingestor = Ingestor(ModelProvider(model))
+    provider = get_provider(model)
+    ingestor = Ingestor(provider)
     result = ingestor.process(input)
+    
+    content = result.get("content", result.get("description", ""))
+    title = result.get("title", "Sin titulo")
+    
+    if summarize and content:
+        click.echo("Generando resumen con LLM...")
+        result["content"] = ingestor.summarize(content, title)
     
     generator = NoteGenerator(Path(vault), include_metadata=metadata)
     output_path = generator.generate(result, category=category)

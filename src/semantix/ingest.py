@@ -14,7 +14,27 @@ class Ingestor:
         elif Path(input_path).exists():
             return self._process_file(input_path)
         else:
-            raise ValueError(f"Input inválido: {input_path}")
+            raise ValueError(f"Input invalido: {input_path}")
+    
+    def summarize(self, content: str, title: str = "") -> str:
+        prompt = f"""Eres un asistente que resume contenido de articles o videos de manera clara y estructurada.
+Crea un resumen completo en formato Markdown con:
+1. Un titulo claro si no se proporciona
+2. Puntos clave del contenido
+3. Secciones principales si aplica
+
+Titulo original: {title}
+
+Contenido a resumir:
+{content[:15000]}
+
+Responde exclusivamente en espaÃ±ol con el resumen en formato Markdown."""
+
+        try:
+            summary = self.model_provider.generate(prompt, content[:15000])
+            return summary
+        except Exception as e:
+            return f"# Error al resumir\n\n{str(e)}\n\n---Contenido original---\n\n{content[:2000]}..."
     
     def _is_url(self, input_str: str) -> bool:
         try:
@@ -85,7 +105,7 @@ class Ingestor:
         elif ext == ".html":
             return self._process_html(file_path)
         
-        raise ValueError(f"Extensión no soportada: {ext}")
+        raise ValueError(f"Extension no soportada: {ext}")
     
     def _process_pdf(self, file_path: str) -> dict:
         try:

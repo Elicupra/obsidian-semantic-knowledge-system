@@ -1,7 +1,8 @@
 import yaml
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
+import json
 
 
 class NoteGenerator:
@@ -11,7 +12,7 @@ class NoteGenerator:
     
     def generate(self, data: dict, category: Optional[str] = None) -> Path:
         content = data.get("content", data.get("description", ""))
-        title = data.get("title", "Sin título")
+        title = data.get("title", "Sin titulo")
         
         markdown = self._build_markdown(
             title=title,
@@ -29,21 +30,34 @@ class NoteGenerator:
         
         if self.include_metadata:
             metadata = {
-                "title": title,
-                "source": source,
-                "type": input_type,
+                "title": str(title),
+                "source": str(source),
+                "type": str(input_type),
                 "created": datetime.now().isoformat(),
-                "category": category or "N/A",
+                "category": str(category or "N/A"),
             }
             lines.append("---")
-            lines.append(yaml.dump(metadata, default_flow_style=False, allow_unicode=True))
+            lines.append(self._simple_yaml_dump(metadata))
             lines.append("---\n")
         
         lines.append(f"# {title}\n")
         
         if content:
-            lines.append(content)
+            lines.append(str(content))
         
+        return "\n".join(lines)
+    
+    def _simple_yaml_dump(self, data: dict) -> str:
+        lines = []
+        for key, value in data.items():
+            if isinstance(value, str):
+                lines.append(f"{key}: {value}")
+            elif isinstance(value, (int, float, bool)):
+                lines.append(f"{key}: {value}")
+            elif value is None:
+                lines.append(f"{key}: null")
+            else:
+                lines.append(f"{key}: {json.dumps(value)}")
         return "\n".join(lines)
     
     def _save_note(self, title: str, content: str, category: Optional[str]) -> Path:
