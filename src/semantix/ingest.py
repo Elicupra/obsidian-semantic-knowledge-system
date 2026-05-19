@@ -138,15 +138,29 @@ class Ingestor:
             "extract_flat": False,
             "writesubtitles": True,
             "writeautomaticsub": True,
+            "gettext": ["subtitles"],
+            "subtitleslangs": ["es", "en", "a"],
+            "skip_download": True,
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
         
+        subtitles_text = ""
+        if "subtitles" in info:
+            for lang, subs in info["subtitles"].items():
+                if subs and isinstance(subs, list):
+                    for sub in subs:
+                        if "data" in sub:
+                            subtitles_text += sub["data"] + "\n"
+        
+        content = subtitles_text.strip() if subtitles_text else info.get("description", "")
+        
         return {
             "type": "video",
             "source": url,
             "title": info.get("title", ""),
+            "content": content,
             "description": info.get("description", ""),
             "transcript": info.get("subtitles", {}),
             "hash": hashlib.sha256(url.encode()).hexdigest()[:16]
