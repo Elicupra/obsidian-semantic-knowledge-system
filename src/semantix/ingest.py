@@ -138,6 +138,7 @@ class Ingestor:
             "extract_flat": False,
             "writesubtitles": True,
             "writeautomaticsub": True,
+            "remote_components": "ejs:github",
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
